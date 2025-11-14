@@ -5,6 +5,8 @@ import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import ThemeInit from "@/components/theme-init"
+import { ReduxProvider } from "@/lib/redux/provider"
+import { AuthProvider } from "@/components/auth/AuthProvider"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -22,9 +24,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
-        <ThemeInit />
-        <Suspense fallback={null}>{children}</Suspense>
-        <Analytics />
+        <ReduxProvider>
+          <AuthProvider>
+            <ThemeInit />
+            <Suspense fallback={null}>{children}</Suspense>
+            <Analytics />
+          </AuthProvider>
+        </ReduxProvider>
       </body>
     </html>
   )
