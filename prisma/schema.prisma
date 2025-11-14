@@ -7,6 +7,10 @@
 generator client {
   provider = "prisma-client"
   output   = "../lib/generated/prisma"
+// Prisma schema file for authentication system
+
+generator client {
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -58,4 +62,34 @@ model StoreSection {
 
   @@index([storeId])
   @@index([sectionType])
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Optional: Add refresh token storage for additional security
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
 }

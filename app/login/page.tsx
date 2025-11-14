@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label"
 import { Store, ArrowLeft, Mail, Lock } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useAppDispatch } from "@/lib/redux/hooks"
+import { setCredentials } from "@/lib/redux/features/authSlice"
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -17,17 +19,46 @@ export default function LoginPage() {
     password: "",
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
   const router = useRouter()
+  const dispatch = useAppDispatch()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError("")
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
 
-    // Redirect to dashboard
-    router.push("/dashboard")
+      const data = await response.json()
+
+      if (response.ok) {
+        // Store user and access token in Redux
+        dispatch(
+          setCredentials({
+            user: data.user,
+            accessToken: data.accessToken,
+          })
+        )
+
+        // Redirect to dashboard
+        router.push("/dashboard")
+      } else {
+        setError(data.error || "Login failed")
+      }
+    } catch (error) {
+      console.error("Login error:", error)
+      setError("An error occurred. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,6 +98,12 @@ export default function LoginPage() {
 
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-md text-sm">
+                  {error}
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
