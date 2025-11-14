@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  stores    Store[]
+}
+
+// Store model - represents a generated AI store
+model Store {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  prompt      String         // Original user prompt
+  colorTheme  Json           // Color theme configuration
+  status      String         @default("draft") // draft, published, archived
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  sections    StoreSection[]
+
+  @@index([userId])
+}
+
+// StoreSection model - represents each section of the store
+model StoreSection {
+  id              String   @id @default(cuid())
+  storeId         String
+  store           Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  sectionType     String   // hero, product_grid, featured_products, testimonials, newsletter, footer
+  layoutId        String   // Reference to the layout used
+  layoutVariant   String   // Specific variant of the layout
+  order           Int      // Display order
+  content         Json     // AI-generated content for this section
+  keywords        String[] // Keywords used for ranking
+  relevanceScore  Float?   // AI relevance score
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([storeId])
+  @@index([sectionType])
+}
